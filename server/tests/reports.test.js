@@ -246,11 +246,12 @@ describe("latest report and freshness", () => {
         assert.equal(latest.body.data.freshness, "Fresh");
     });
 
-    it("fails closed when the application has no authentication middleware configured", async () => {
+    it("rejects report submission without a valid JWT", async () => {
         const response = await request(serverApp)
             .post(`/api/spaces/${space.id}/reports`)
             .send({ status: "Available" });
-        assert.equal(response.status, 503);
+
+        assert.equal(response.status, 401);
         assert.equal(await SpaceReport.countDocuments({}), 0);
     });
 });
