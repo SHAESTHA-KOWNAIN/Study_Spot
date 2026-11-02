@@ -6,9 +6,9 @@ import { mockReports } from "../data/mockReports.js";
 describe("availability helpers", () => {
   it("calculates fresh, stale, and missing reports independently of status", () => {
     const now = new Date("2026-10-29T10:00:00Z").getTime();
-    expect(getFreshness("2026-10-29T09:00:00Z", 2, now)).toBe("fresh");
-    expect(getFreshness("2026-10-29T07:59:00Z", 2, now)).toBe("stale");
-    expect(getFreshness(null, 2, now)).toBe("none");
+    expect(getFreshness("2026-10-29T09:01:00Z", 60, now)).toBe("fresh");
+    expect(getFreshness("2026-10-29T09:00:00Z", 60, now)).toBe("stale");
+    expect(getFreshness(null, 60, now)).toBe("none");
   });
 
   it("renders a latest report based on timestamp, not array order", () => {

@@ -9,7 +9,11 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 100;
 
 function getModel(name) {
-    return mongoose.models[name] || mongoose.model(name);
+    return mongoose.models[name] || null;
+}
+
+function sendMissingSpaceModelError(res) {
+    return sendError(res, 503, "Study-space data is not configured.");
 }
 
 function sendError(res, status, message) {
@@ -77,16 +81,14 @@ async function createReport(req, res) {
     if (note !== undefined && typeof note !== "string") {
         return sendError(res, 400, "Note must be text.");
     }
-    if (note !== undefined) {
-        const trimmedNote = note.trim();
-        if (!trimmedNote) return sendError(res, 400, "Note cannot be empty.");
-        if (trimmedNote.length > 300) {
-            return sendError(res, 400, "Note must be 300 characters or fewer.");
-        }
+    if (note !== undefined && note.length > 300) {
+        return sendError(res, 400, "Note must be 300 characters or fewer.");
     }
+    const trimmedNote = note?.trim();
 
     try {
         const StudySpace = getModel("StudySpace");
+        if (!StudySpace) return sendMissingSpaceModelError(res);
         const space = await StudySpace.findOne({
             _id: spaceId,
             active: { $ne: false }
@@ -97,7 +99,7 @@ async function createReport(req, res) {
             spaceId,
             reporterId: user._id,
             status,
-            ...(note === undefined ? {} : { note: note.trim() })
+            ...(trimmedNote ? { note: trimmedNote } : {})
         });
         await report.save();
         await report.populate({ path: "reporterId", select: "name" });
@@ -132,6 +134,7 @@ async function getReportHistory(req, res) {
 
     try {
         const StudySpace = getModel("StudySpace");
+        if (!StudySpace) return sendMissingSpaceModelError(res);
         const space = await StudySpace.findById(spaceId).select("_id").exec();
         if (!space) return sendError(res, 404, "Study space not found.");
 
@@ -173,6 +176,7 @@ async function getLatestReportStatus(req, res) {
 
     try {
         const StudySpace = getModel("StudySpace");
+        if (!StudySpace) return sendMissingSpaceModelError(res);
         const space = await StudySpace.findById(spaceId).select("_id").exec();
         if (!space) return sendError(res, 404, "Study space not found.");
 

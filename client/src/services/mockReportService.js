@@ -4,7 +4,8 @@ import { readReports, readSpaces, writeReports } from "./mockStorage.js";
 export async function getSpaceReports(spaceId) {
   if (!readSpaces().some((space) => space.id === spaceId)) throw new Error("Study space not found.");
   return readReports().filter((report) => report.spaceId === spaceId)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10);
 }
 
 export async function createSpaceReport(spaceId, reportData, reporter) {

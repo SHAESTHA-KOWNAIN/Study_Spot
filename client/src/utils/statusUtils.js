@@ -1,12 +1,13 @@
 export const REPORT_STATUSES = ["Available", "Moderately Busy", "Busy", "Temporarily Closed"];
-const configuredThreshold = Number(import.meta.env.VITE_STALE_AFTER_HOURS);
-const defaultThresholdHours = Number.isFinite(configuredThreshold) && configuredThreshold >= 0 ? configuredThreshold : 2;
+const thresholdValue = import.meta.env.VITE_STATUS_STALE_AFTER_MINUTES;
+const configuredThreshold = thresholdValue?.trim() ? Number(thresholdValue) : 60;
+const defaultThresholdMinutes = Number.isFinite(configuredThreshold) && configuredThreshold >= 0 ? configuredThreshold : 60;
 
-export function getFreshness(timestamp, thresholdHours = defaultThresholdHours, now = Date.now()) {
+export function getFreshness(timestamp, thresholdMinutes = defaultThresholdMinutes, now = Date.now()) {
   if (!timestamp) return "none";
   const reportTime = new Date(timestamp).getTime();
   if (!Number.isFinite(reportTime)) return "stale";
-  return now - reportTime <= thresholdHours * 60 * 60 * 1000 ? "fresh" : "stale";
+  return now - reportTime < thresholdMinutes * 60 * 1000 ? "fresh" : "stale";
 }
 
 export function latestReport(reports = []) {

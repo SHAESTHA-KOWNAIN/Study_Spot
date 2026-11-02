@@ -42,11 +42,11 @@ let mongoServer;
 let member;
 let space;
 let memberToken;
-let originalStaleAfterHours;
+let originalStatusStaleAfterMinutes;
 
 before(async () => {
-    originalStaleAfterHours = process.env.STALE_AFTER_HOURS;
-    process.env.STALE_AFTER_HOURS = "2";
+    originalStatusStaleAfterMinutes = process.env.STATUS_STALE_AFTER_MINUTES;
+    process.env.STATUS_STALE_AFTER_MINUTES = "120";
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
 });
@@ -54,8 +54,8 @@ before(async () => {
 after(async () => {
     await mongoose.disconnect();
     await mongoServer.stop();
-    if (originalStaleAfterHours === undefined) delete process.env.STALE_AFTER_HOURS;
-    else process.env.STALE_AFTER_HOURS = originalStaleAfterHours;
+    if (originalStatusStaleAfterMinutes === undefined) delete process.env.STATUS_STALE_AFTER_MINUTES;
+    else process.env.STATUS_STALE_AFTER_MINUTES = originalStatusStaleAfterMinutes;
 });
 
 beforeEach(async () => {
@@ -131,11 +131,12 @@ describe("report submission", () => {
         assert.equal((await submitReport(space.id)).status, 404);
     });
 
-    it("rejects blank and overlong notes", async () => {
-        assert.equal((await submitReport(space.id, { status: "Available", note: "" })).status, 400);
-        assert.equal((await submitReport(space.id, { status: "Available", note: "   \t " })).status, 400);
+    it("treats a blank optional note as absent and rejects overlong notes", async () => {
+        const blankNote = await submitReport(space.id, { status: "Available", note: "   \t " });
+        assert.equal(blankNote.status, 201);
+        assert.equal(blankNote.body.data.report.note, undefined);
         assert.equal((await submitReport(space.id, { status: "Available", note: "x".repeat(301) })).status, 400);
-        assert.equal(await SpaceReport.countDocuments({}), 0);
+        assert.equal(await SpaceReport.countDocuments({}), 1);
     });
 });
 
@@ -185,9 +186,37 @@ describe("report history", () => {
         assert.equal((await request(app).get(`/api/spaces/${space.id}/reports?limit=101`)).status, 400);
     });
 
+    it("returns only the ten most recent reports by default", async () => {
+        await SpaceReport.create(Array.from({ length: 12 }, (_, index) => ({
+            spaceId: space.id,
+            reporterId: member.id,
+            status: "Available",
+            reportedAt: new Date(Date.UTC(2026, 9, 31, 0, index))
+        })));
+
+        const response = await request(app).get(`/api/spaces/${space.id}/reports`);
+        assert.equal(response.status, 200);
+        assert.equal(response.body.data.reports.length, 10);
+        assert.equal(response.body.data.pagination.totalReports, 12);
+        assert.equal(response.body.data.reports[0].reportedAt, "2026-10-31T00:11:00.000Z");
+        assert.equal(response.body.data.reports[9].reportedAt, "2026-10-31T00:02:00.000Z");
+    });
+
     it("returns 400 for invalid IDs and 404 for missing spaces", async () => {
         assert.equal((await request(app).get("/api/spaces/nope/reports")).status, 400);
         assert.equal((await request(app).get(`/api/spaces/${new mongoose.Types.ObjectId()}/reports`)).status, 404);
+    });
+
+    it("returns a clear service error when the team-owned space model is not registered", async () => {
+        const registeredModel = mongoose.models.StudySpace;
+        delete mongoose.models.StudySpace;
+        try {
+            const response = await request(app).get(`/api/spaces/${space.id}/reports`);
+            assert.equal(response.status, 503);
+            assert.equal(response.body.message, "Study-space data is not configured.");
+        } finally {
+            mongoose.models.StudySpace = registeredModel;
+        }
     });
 });
 
@@ -214,16 +243,16 @@ describe("latest report and freshness", () => {
         assert.equal(calculateFreshness(null, now), "No Report");
     });
 
-    it("uses configured freshness periods and defaults to two hours", () => {
-        const previous = process.env.STALE_AFTER_HOURS;
+    it("uses configured freshness periods and defaults to 60 minutes", () => {
+        const previous = process.env.STATUS_STALE_AFTER_MINUTES;
         try {
-            delete process.env.STALE_AFTER_HOURS;
-            assert.equal(calculateFreshness("2026-10-31T08:00:00Z", new Date("2026-10-31T10:00:00Z")), "Stale");
-            process.env.STALE_AFTER_HOURS = "4";
-            assert.equal(calculateFreshness("2026-10-31T08:00:00Z", new Date("2026-10-31T10:00:00Z")), "Fresh");
+            delete process.env.STATUS_STALE_AFTER_MINUTES;
+            assert.equal(calculateFreshness("2026-10-31T09:00:00Z", new Date("2026-10-31T10:00:00Z")), "Stale");
+            process.env.STATUS_STALE_AFTER_MINUTES = "120";
+            assert.equal(calculateFreshness("2026-10-31T09:00:00Z", new Date("2026-10-31T10:00:00Z")), "Fresh");
         } finally {
-            if (previous === undefined) delete process.env.STALE_AFTER_HOURS;
-            else process.env.STALE_AFTER_HOURS = previous;
+            if (previous === undefined) delete process.env.STATUS_STALE_AFTER_MINUTES;
+            else process.env.STATUS_STALE_AFTER_MINUTES = previous;
         }
     });
 

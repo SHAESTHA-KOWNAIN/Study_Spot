@@ -1,6 +1,6 @@
 # StudySpot API (proposed)
 
-This document describes the client API contract and implementation status. Authentication and study-space endpoints remain proposed; the availability report endpoints are implemented as described below.
+This document describes the client API contract and implementation status. Authentication and availability-report endpoints are implemented; study-space endpoints remain in progress.
 
 ## Conventions proposed
 
@@ -141,11 +141,11 @@ Authenticated member or moderator. Request:
 }
 ```
 
-The note is optional and limited to 300 trimmed characters. Reporter identity and timestamp are derived on the server. The implemented success response is `201` with `{ "success": true, "data": { "report": {/* report object */} } }`. Each submission creates a separate report document.
+The note is optional and limited to 300 characters; surrounding whitespace is trimmed and a blank note is omitted. Reporter identity and timestamp are derived on the server. The implemented success response is `201` with `{ "success": true, "data": { "report": {/* report object */} } }`. Each submission creates a separate report document.
 
 ### `GET /api/spaces/:id/reports/latest`
 
-Returns the latest report and its computed freshness as `{ "success": true, "data": { "report": {/* report object */}, "status": "Available", "reportedAt": "2026-10-31T08:00:00.000Z", "freshness": "Fresh" } }`. Freshness is `Fresh`, `Stale`, or `No Report`; reports become stale at an age greater than or equal to `STALE_AFTER_HOURS` (default `2`). With no reports, `report`, `status`, and `reportedAt` are `null`, and `freshness` is `No Report`. The report's original status is not modified.
+Returns the latest report and its computed freshness as `{ "success": true, "data": { "report": {/* report object */}, "status": "Available", "reportedAt": "2026-10-31T08:00:00.000Z", "freshness": "Fresh" } }`. Freshness is `Fresh`, `Stale`, or `No Report`; reports become stale at an age greater than or equal to `STATUS_STALE_AFTER_MINUTES` (default `60`). With no reports, `report`, `status`, and `reportedAt` are `null`, and `freshness` is `No Report`. The report's original status is not modified.
 
 ## Decisions needed before backend implementation
 

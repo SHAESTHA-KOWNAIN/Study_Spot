@@ -1,24 +1,24 @@
 const SpaceReport = require("../models/SpaceReport");
 
-const DEFAULT_STALE_AFTER_HOURS = 2;
+const DEFAULT_STALE_AFTER_MINUTES = 60;
 
-function getStaleAfterHours() {
-    const configured = process.env.STALE_AFTER_HOURS;
+function getStaleAfterMinutes() {
+    const configured = process.env.STATUS_STALE_AFTER_MINUTES;
     if (configured === undefined || configured.trim() === "") {
-        return DEFAULT_STALE_AFTER_HOURS;
+        return DEFAULT_STALE_AFTER_MINUTES;
     }
 
-    const hours = Number(configured);
-    if (!Number.isFinite(hours) || hours < 0) {
-        throw new Error("STALE_AFTER_HOURS must be a non-negative number.");
+    const minutes = Number(configured);
+    if (!Number.isFinite(minutes) || minutes < 0) {
+        throw new Error("STATUS_STALE_AFTER_MINUTES must be a non-negative number.");
     }
-    return hours;
+    return minutes;
 }
 
-function calculateFreshness(reportedAt, now = new Date(), thresholdHours = getStaleAfterHours()) {
+function calculateFreshness(reportedAt, now = new Date(), thresholdMinutes = getStaleAfterMinutes()) {
     if (reportedAt === null || reportedAt === undefined) return "No Report";
-    if (!Number.isFinite(thresholdHours) || thresholdHours < 0) {
-        throw new TypeError("Freshness threshold must be a non-negative number.");
+    if (!Number.isFinite(thresholdMinutes) || thresholdMinutes < 0) {
+        throw new TypeError("Freshness threshold must be a non-negative number of minutes.");
     }
 
     const reportTime = new Date(reportedAt).getTime();
@@ -27,7 +27,7 @@ function calculateFreshness(reportedAt, now = new Date(), thresholdHours = getSt
         throw new TypeError("Report and current timestamps must be valid dates.");
     }
 
-    return currentTime - reportTime >= thresholdHours * 60 * 60 * 1000
+    return currentTime - reportTime >= thresholdMinutes * 60 * 1000
         ? "Stale"
         : "Fresh";
 }
@@ -52,5 +52,6 @@ async function getLatestStatus(spaceId, now = new Date()) {
 module.exports = {
     calculateFreshness,
     getLatestReport,
-    getLatestStatus
+    getLatestStatus,
+    getStaleAfterMinutes
 };

@@ -148,6 +148,7 @@
 .latest-report-card .mini-label { display: block; margin-bottom: 13px; }
 .latest-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .latest-time { display: flex; align-items: center; gap: 6px; margin: 14px 0 7px; color: #667289; font-size: .78rem; line-height: 1.5; }
+.latest-note { margin: 10px 0; color: #59667e; font-size: .86rem; line-height: 1.6; overflow-wrap: anywhere; }
 .freshness-explanation { margin: 10px 0; color: #7c8799; font-size: .79rem; line-height: 1.55; }
 .community-note { display: block; padding-top: 12px; border-top: 1px solid #e9ebf2; color: #8a94a5; font-size: .7rem; line-height: 1.5; }
 .detail-lower-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 18px; margin-top: 20px; }

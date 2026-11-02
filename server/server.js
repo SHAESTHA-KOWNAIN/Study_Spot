@@ -1,4 +1,10 @@
-require("dotenv").config();
+const os = require("node:os");
+const path = require("node:path");
+const privateConfigDirectory = process.env.LOCALAPPDATA || path.join(os.homedir(), ".config");
+require("dotenv").config({
+    path: path.join(privateConfigDirectory, "StudySpot", "server.env")
+});
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const app = require("./app");
 const connectDB = require("./src/config/db");

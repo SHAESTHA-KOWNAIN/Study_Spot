@@ -1,6 +1,6 @@
 # StudySpot server (in progress)
 
-The backend is in progress. Availability report submission, history, latest-report retrieval, and freshness calculations are implemented. The authentication and study-space modules are still owned by other team members and are not implemented here.
+The backend is in progress. Authentication and availability report submission, history, latest-report retrieval, and freshness calculations are implemented. The study-space module remains owned by another team member and is not included in this checkout.
 
 ## Planned stack
 
@@ -21,14 +21,14 @@ The backend is in progress. Availability report submission, history, latest-repo
 
 ## Report module integration
 
-The report routes are mounted under `/api/spaces`. History and latest-status reads are public. Report submission requires an authentication middleware passed to `createReportRoutes({ authenticate })`; that middleware must set `req.user` with `_id`, `name`, and `role` (`member` or `moderator`). Until the authentication owner wires in that middleware, submissions fail closed with `503`; no placeholder or bypass authentication is used.
+The report routes are mounted under `/api/spaces`. History and latest-status reads are public. The application passes the existing JWT authentication middleware to `createReportRoutes`; report submissions require an authenticated `member` or `moderator`.
 
-The report module references Mongoose models named `StudySpace` and `User`. The study-space model must expose an `active` field (spaces without `active: false` are treated as active), and the user model must expose `name`. Reporter population explicitly selects only `name`.
+The report module references Mongoose models named `StudySpace` and `User`. The study-space model must expose an `active` field (spaces without `active: false` are treated as active), and the user model must expose `name`. Reporter population explicitly selects only `name`. The `StudySpace` model is not present in this checkout, so report endpoints require the team-owned study-space model to be registered before server integration is runnable.
 
-`STALE_AFTER_HOURS` controls freshness and defaults to `2`. Freshness is calculated when requested and is never stored in a report.
+`STATUS_STALE_AFTER_MINUTES` controls freshness and defaults to `60`. Freshness is calculated when requested and is never stored in a report. A report becomes stale at the threshold; its original availability and report history remain unchanged.
 
 ## Environment and implementation status
 
-The root [`.env.example`](../.env.example) contains proposed local-development settings only. No real secrets belong in Git. Database schema, token policy, error format, validation rules, and deployment settings remain to be decided when backend work begins.
+The server loads its private configuration from `%LOCALAPPDATA%\\StudySpot\\server.env` on Windows (or `~/.config/StudySpot/server.env` elsewhere), then falls back to `server/.env` for standard local setups. Keep credentials out of tracked example files; `server/.env.example` contains placeholders only. The root [`.env.example`](../.env.example) is a template, not a secrets file. Database schema, token policy, error format, validation rules, and deployment settings remain to be decided when backend work begins.
 
 The frontend works independently in mock mode. Report API tests use an isolated in-memory MongoDB; they do not connect to the configured development database.

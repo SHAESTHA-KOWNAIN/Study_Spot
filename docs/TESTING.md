@@ -34,7 +34,7 @@ The report API suite runs from the repository root with:
 npm --prefix server test
 ```
 
-The tests use `mongodb-memory-server` and Supertest; they do not connect to a development or production database. They cover report creation and validation, authentication integration behavior, report history and pagination, safe reporter population, latest-report selection, and freshness boundaries/configuration.
+The tests use `mongodb-memory-server` and Supertest; they do not connect to a development or production database. They cover report creation and validation, authentication integration behavior, report history and pagination, safe reporter population, latest-report selection, and freshness boundaries/configuration using `STATUS_STALE_AFTER_MINUTES` (default `60`).
 
 Authentication integration is tested with a test-only middleware. Production report submission remains fail-closed until the authentication module is wired in. Registration/login, JWT expiry, study-space CRUD, and end-to-end integration tests remain for the corresponding team members.
 

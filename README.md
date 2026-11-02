@@ -6,7 +6,7 @@ StudySpot helps students find libraries, quiet study zones, reading rooms, and g
 
 ## Project status
 
-The React frontend is implemented and works independently with mock data. The backend now includes availability report submission, history, latest-report retrieval, and freshness handling. Authentication and study-space APIs are still being implemented; report submissions fail closed until the authentication middleware is wired in. See [server/README.md](./server/README.md) and [docs/API.md](./docs/API.md).
+The React frontend is implemented and works independently with mock data. The backend includes authentication and availability report submission, history, latest-report retrieval, and freshness handling. Live report endpoints require the team-owned `StudySpace` model, which is not present in this checkout; they return `503` until it is registered. See [server/README.md](./server/README.md) and [docs/API.md](./docs/API.md).
 
 ## Repository structure
 
@@ -131,7 +131,7 @@ The four report statuses are **Available**, **Moderately Busy**, **Busy**, and *
 - **Stale:** latest report is older than the threshold.
 - **No reports yet:** no report exists for the space.
 
-The default threshold is two hours.
+The default freshness threshold is 60 minutes. The backend reads `STATUS_STALE_AFTER_MINUTES`; the mock frontend reads its Vite-exposed counterpart, `VITE_STATUS_STALE_AFTER_MINUTES`.
 
 ## Environment configuration
 
@@ -140,24 +140,24 @@ The frontend reads `client/.env`; begin with `client/.env.example`:
 ```dotenv
 VITE_USE_MOCK_API=true
 VITE_API_BASE_URL=http://localhost:5000/api
-VITE_STALE_AFTER_HOURS=2
+VITE_STATUS_STALE_AFTER_MINUTES=60
 ```
 
 | Variable | Description |
 |---|---|
 | `VITE_USE_MOCK_API` | Use mock services unless set to `false` |
 | `VITE_API_BASE_URL` | Base URL for the planned Express API |
-| `VITE_STALE_AFTER_HOURS` | Hours before a report is marked stale |
+| `VITE_STATUS_STALE_AFTER_MINUTES` | Minutes before a report is marked stale in the frontend/mock API |
 
-Restart Vite after changing environment variables. Variables prefixed with `VITE_` are exposed to browser code; never put secrets in them.
+Set `STATUS_STALE_AFTER_MINUTES` in the server environment and use the same value for `VITE_STATUS_STALE_AFTER_MINUTES` in the client so status freshness is consistent. Restart the server and Vite after changing environment variables. Variables prefixed with `VITE_` are exposed to browser code; never put secrets in them.
 
-The root `.env.example` lists proposed server settings only. It does not indicate that a backend is present. Keep real `.env` files local and out of Git.
+The server reads private configuration from `%LOCALAPPDATA%\\StudySpot\\server.env` on Windows (or `~/.config/StudySpot/server.env` elsewhere), with `server/.env` as a fallback. Keep real credentials out of tracked `.env.example` files and Git.
 
 Mock data changes persist in browser localStorage. The moderator dashboard offers a confirmation-protected reset of sample spaces, reports, and mock registrations.
 
 ## Planned API
 
-The client adapter is prepared for the endpoint families below. Report submission, history, and latest-status routes are implemented; authentication and study-space routes and full client integration remain to be implemented. See [docs/API.md](./docs/API.md) for the reporting contract and remaining decisions.
+The client adapter is prepared for the endpoint families below. Authentication and report submission, history, and latest-status routes are implemented; study-space routes and complete live client integration remain in progress. See [docs/API.md](./docs/API.md) for the reporting contract and remaining decisions.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -176,7 +176,7 @@ Directory filters are planned for `search`, `building`, `area`, `quietZone`, `gr
 ## Security and limitations
 
 - Mock authentication and browser storage are not secure and must not be used in production.
-- Backend password hashing, token validation, input validation, and role authorization remain to be implemented server-side.
+- Backend authentication, input validation, and role authorization are enforced server-side; production deployment settings still need to be configured.
 - Availability is community-reported, not live occupancy.
 - The real Express API has not been implemented or tested against the frontend; response mapping may need updates when the contract is finalized.
 - Registered mock-account credentials are intentionally not persisted.
