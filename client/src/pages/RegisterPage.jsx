@@ -47,7 +47,9 @@ export default function RegisterPage() {
       await register(values);
       navigate("/spaces", { replace: true });
     } catch (error) {
-      setRequestError(error.message || "Your account could not be created.");
+        setRequestError(
+          error.userMessage || "Registration failed. Please try again."
+        );
     } finally {
       setSubmitting(false);
     }

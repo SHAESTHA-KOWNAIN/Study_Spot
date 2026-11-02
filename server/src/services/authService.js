@@ -1,4 +1,5 @@
-﻿const bcrypt = require("bcryptjs");
+﻿
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
@@ -27,14 +28,18 @@ function publicUser(user) {
 }
 
 async function register({ name, email, password }) {
-     if (!process.env.JWT_SECRET) {
+    if (!process.env.JWT_SECRET) {
         throw new Error("JWT_SECRET is not configured.");
     }
+
     const normalizedEmail = email.trim().toLowerCase();
 
     const existingUser = await User.findOne({ email: normalizedEmail });
+
     if (existingUser) {
-        const error = new Error("An account with this email already exists.");
+        const error = new Error(
+            "An account with this email already exists. Please log in instead."
+        );
         error.status = 409;
         throw error;
     }
@@ -60,12 +65,32 @@ async function login({ email, password }) {
     const user = await User.findOne({ email: normalizedEmail })
         .select("+passwordHash");
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-        const error = new Error("Email or password is incorrect.");
+    // Case 1: Email is not registered
+    if (!user) {
+        const error = new Error(
+            "No account found with this email. Please register first."
+        );
         error.status = 401;
+        error.code = "EMAIL_NOT_REGISTERED";
         throw error;
     }
 
+    // Case 2: Email exists, but password is incorrect
+    const passwordMatches = await bcrypt.compare(
+        password,
+        user.passwordHash
+    );
+
+    if (!passwordMatches) {
+        const error = new Error(
+            "Incorrect password. Please try again."
+        );
+        error.status = 401;
+        error.code = "INVALID_PASSWORD";
+        throw error;
+    }
+
+    // Case 3: Login successful
     return {
         token: createToken(user),
         user: publicUser(user)
