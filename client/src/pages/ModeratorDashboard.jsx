@@ -23,7 +23,16 @@ function SpaceEditor({ initial, onSave, onCancel, submitting, formRef }) {
 
   function submit(event) {
     event.preventDefault();
-    const data = { ...values, facilities: facilitiesText.split(",").map((item) => item.trim()).filter(Boolean) };
+    const data = {
+      name: values.name,
+      building: values.building,
+      area: values.area,
+      description: values.description,
+      facilities: facilitiesText.split(",").map((item) => item.trim()).filter(Boolean),
+      quietZone: values.quietZone,
+      groupStudyAllowed: values.groupStudyAllowed,
+      active: values.active,
+    };
     const nextErrors = validateSpace(data);
     setErrors(nextErrors);
     if (!Object.keys(nextErrors).length) onSave(data);
