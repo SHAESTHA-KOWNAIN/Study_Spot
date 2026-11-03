@@ -16,7 +16,7 @@ function createReportRoutes({ authenticate } = {}) {
     const router = express.Router();
     const reportAuthentication = authenticate || authenticationNotConfigured;
 
-    router.post("/:id/reports", reportAuthentication, createReport);
+    router.post("/:id/reports", reportAuthentication,createReport);
     router.get("/:id/reports/latest", getLatestReportStatus);
     router.get("/:id/reports", getReportHistory);
 
