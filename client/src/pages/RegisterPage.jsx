@@ -1,5 +1,11 @@
+
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { ArrowRight, BookOpen, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { validateRegistration } from "../utils/validation.js";
@@ -11,12 +17,17 @@ export default function RegisterPage() {
   const { user, loading, register } = useAuth();
   const navigate = useNavigate();
 
+  // Read the moderator invitation token from the URL.
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get("invite");
+
   const [values, setValues] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
   const [errors, setErrors] = useState({});
   const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -44,12 +55,18 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      await register(values);
+      await register({
+        ...values,
+        ...(invitationToken ? { invitationToken } : {}),
+      });
+
       navigate("/spaces", { replace: true });
     } catch (error) {
-        setRequestError(
-          error.userMessage || error.message || "Registration failed. Please try again."
-        );
+      setRequestError(
+        error.userMessage ||
+          error.message ||
+          "Registration failed. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
