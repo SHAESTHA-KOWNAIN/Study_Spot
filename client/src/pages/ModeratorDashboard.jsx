@@ -74,7 +74,7 @@ export default function ModeratorDashboard() {
       setSpaces(allSpaces);
       setReports(reportGroups.flat());
     } catch (loadError) {
-      setError(loadError.message || "The management dashboard could not be loaded.");
+      setError(loadError.userMessage || loadError.message || "The management dashboard could not be loaded.");
     } finally { setLoading(false); }
   }, []);
 
@@ -100,7 +100,10 @@ export default function ModeratorDashboard() {
   const reportBySpace = useMemo(() => new Map(spaces.map((space) => [space.id, latestReport(reports.filter((report) => report.spaceId === space.id))])), [spaces, reports]);
   const activeSpaces = spaces.filter((space) => space.active);
   const withReports = activeSpaces.filter((space) => reportBySpace.get(space.id));
-  const staleCount = withReports.filter((space) => getFreshness(reportBySpace.get(space.id)?.createdAt) === "stale").length;
+  const staleCount = withReports.filter((space) => {
+    const report = reportBySpace.get(space.id);
+    return getFreshness(report?.createdAt, undefined, Date.now(), report?.freshness, report?.freshnessThresholdMinutes) === "stale";
+  }).length;
   const visibleSpaces = spaces.filter((space) => {
     if (visibility === "active" && !space.active) return false;
     if (visibility === "inactive" && space.active) return false;
@@ -117,7 +120,7 @@ export default function ModeratorDashboard() {
       setToast({ type: "success", message: editing?.id ? "Study space updated." : "Study space created." });
       await loadData();
     } catch (saveError) {
-      setToast({ type: "error", message: saveError.message || "The study space could not be saved." });
+      setToast({ type: "error", message: saveError.userMessage || saveError.message || "The study space could not be saved." });
     } finally { setFormBusy(false); }
   }
 
@@ -130,7 +133,7 @@ export default function ModeratorDashboard() {
       setDeactivating(null);
       await loadData();
     } catch (actionError) {
-      setToast({ type: "error", message: actionError.message || "The space could not be deactivated." });
+      setToast({ type: "error", message: actionError.userMessage || actionError.message || "The space could not be deactivated." });
     } finally { setDialogBusy(false); }
   }
 
@@ -142,7 +145,7 @@ export default function ModeratorDashboard() {
       setToast({ type: "success", message: "Sample spaces and reports have been restored." });
       await loadData();
     } catch (actionError) {
-      setToast({ type: "error", message: actionError.message || "Sample data could not be reset." });
+      setToast({ type: "error", message: actionError.userMessage || actionError.message || "Sample data could not be reset." });
     } finally { setDialogBusy(false); }
   }
 

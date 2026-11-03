@@ -3,7 +3,9 @@ const cors = require("cors");
 
 const authRoutes = require("./src/routes/authRoutes");
 const createReportRoutes = require("./src/routes/reportRoutes");
+const createSpaceRoutes = require("./src/routes/spaceRoutes");
 const { authenticate } = require("./src/middleware/authMiddleware");
+require("./src/models/StudySpace");
 
 const app = express();
 
@@ -17,7 +19,8 @@ app.use(express.json());
 // Authentication routes
 app.use("/api/auth", authRoutes);
 
-// Space report routes
+// Study-space and report routes
+app.use("/api/spaces", createSpaceRoutes({ authenticate }));
 app.use("/api/spaces", createReportRoutes({ authenticate }));
 
 // Health check

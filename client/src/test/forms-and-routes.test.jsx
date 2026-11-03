@@ -50,6 +50,18 @@ describe("forms and access routes", () => {
     expect(await screen.findByText("Thanks — your update has been shared.")).toBeInTheDocument();
   });
 
+  it("shows a friendly API message before the generic request error", async () => {
+    const onSubmit = vi.fn().mockRejectedValue(Object.assign(
+      new Error("Request failed with status code 400"),
+      { userMessage: "Choose a valid availability status." },
+    ));
+    render(<ReportForm onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByLabelText(/current availability/i), { target: { value: "Available" } });
+    fireEvent.click(screen.getByRole("button", { name: /share an update/i }));
+    expect(await screen.findByText("Choose a valid availability status.")).toBeInTheDocument();
+    expect(screen.queryByText("Request failed with status code 400")).not.toBeInTheDocument();
+  });
+
   it("redirects signed-out visitors from protected moderator pages", async () => {
     localStorage.clear();
     renderWithAuth(

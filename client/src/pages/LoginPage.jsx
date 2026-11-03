@@ -46,7 +46,7 @@ export default function LoginPage() {
       });
     } catch (error) {
       setRequestError(
-        error.userMessage || "Login failed. Please try again."
+        error.userMessage || error.message || "Login failed. Please try again."
       );
     } finally {
       setSubmitting(false);

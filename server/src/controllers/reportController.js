@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const SpaceReport = require("../models/SpaceReport");
 const {
-    getLatestStatus
+    calculateFreshness,
+    getLatestStatus,
+    getStaleAfterMinutes
 } = require("../services/statusService");
 const { REPORT_STATUSES } = require("../utils/reportConstants");
 const DEFAULT_PAGE = 1;
@@ -43,6 +45,8 @@ function serializeReport(report) {
         ...value,
         id: String(value._id),
         createdAt: value.reportedAt,
+        freshness: calculateFreshness(value.reportedAt),
+        freshnessThresholdMinutes: getStaleAfterMinutes(),
         reporterName: reporter?.name || "Community member"
     };
 }

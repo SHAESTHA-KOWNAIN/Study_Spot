@@ -26,7 +26,7 @@ Build verification:
 npm run build
 ```
 
-## Backend report tests (implemented)
+## Backend API tests (implemented)
 
 The report API suite runs from the repository root with:
 
@@ -34,10 +34,10 @@ The report API suite runs from the repository root with:
 npm --prefix server test
 ```
 
-The tests use `mongodb-memory-server` and Supertest; they do not connect to a development or production database. They cover report creation and validation, authentication integration behavior, report history and pagination, safe reporter population, latest-report selection, and freshness boundaries/configuration using `STATUS_STALE_AFTER_MINUTES` (default `60`).
+The tests use `mongodb-memory-server` and Supertest; they do not connect to a development or production database. They cover authentication, study-space CRUD and moderator authorization, input and ID validation, directory filters, deactivation with retained reports, report creation and validation, report history and pagination, safe reporter population, latest-report selection, and freshness boundaries/configuration using `STATUS_STALE_AFTER_MINUTES` (default `60`).
 
-Authentication integration is tested with a test-only middleware. Production report submission remains fail-closed until the authentication module is wired in. Registration/login, JWT expiry, study-space CRUD, and end-to-end integration tests remain for the corresponding team members.
+Authentication and moderator authorization are exercised against the production middleware and routes. The report module also has isolated route tests using test-only authenticated users.
 
 ## End-to-end testing (planned)
 
-After the backend is implemented, add a browser-level smoke flow for member login/report submission and moderator space management. Until then, the frontend should be verified with mock mode, `npm test`, and `npm run build`.
+Add a browser-level smoke flow for member login/report submission and moderator space management when an end-to-end environment is available. The frontend suite can still be verified independently in mock mode with `npm test` and `npm run build`.

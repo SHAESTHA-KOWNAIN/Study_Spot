@@ -6,7 +6,7 @@ StudySpot helps students find libraries, quiet study zones, reading rooms, and g
 
 ## Project status
 
-The React frontend is implemented and works independently with mock data. The backend includes authentication and availability report submission, history, latest-report retrieval, and freshness handling. Live report endpoints require the team-owned `StudySpace` model, which is not present in this checkout; they return `503` until it is registered. See [server/README.md](./server/README.md) and [docs/API.md](./docs/API.md).
+The React frontend supports both mock data and the Express API. The backend includes authentication, study-space listing and moderator management, and availability report submission, history, latest-report retrieval, and freshness handling. See [server/README.md](./server/README.md) and [docs/API.md](./docs/API.md).
 
 ## Repository structure
 
@@ -29,7 +29,7 @@ studyspot/
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
-├── server/                 # Planned backend; documentation only so far
+├── server/                 # Express backend and tests
 ├── docs/                   # Proposed API contract and testing notes
 ├── screenshots/
 ├── .env.example            # Proposed server configuration
@@ -67,13 +67,13 @@ Frontend route protection is for user experience only. Real authentication and a
 |---|---|
 | React, JavaScript, Vite | Frontend and build tooling |
 | React Router DOM | Client-side routing |
-| Axios | Planned HTTP API integration |
+| Axios | HTTP API integration |
 | Lucide React | Icons |
 | CSS3 | Responsive styling |
 | Vitest, React Testing Library | Frontend tests |
 | localStorage | Development mock-data persistence |
 
-**Backend:** Node.js, Express.js, MongoDB, and Mongoose. Reporting endpoints are implemented; authentication, study-space APIs, and full frontend integration remain in progress.
+**Backend:** Node.js, Express.js, MongoDB, and Mongoose. Authentication, study-space, and reporting endpoints are implemented.
 
 ## Run the client
 
@@ -98,7 +98,7 @@ npm run build     # Build the production bundle
 npm run preview   # Preview the production build
 ```
 
-See [docs/TESTING.md](./docs/TESTING.md) for implemented frontend and reporting API tests and planned backend integration tests.
+See [docs/TESTING.md](./docs/TESTING.md) for frontend and backend API test coverage.
 
 ## Demo accounts
 
@@ -146,7 +146,7 @@ VITE_STATUS_STALE_AFTER_MINUTES=60
 | Variable | Description |
 |---|---|
 | `VITE_USE_MOCK_API` | Use mock services unless set to `false` |
-| `VITE_API_BASE_URL` | Base URL for the planned Express API |
+| `VITE_API_BASE_URL` | Base URL for the Express API |
 | `VITE_STATUS_STALE_AFTER_MINUTES` | Minutes before a report is marked stale in the frontend/mock API |
 
 Set `STATUS_STALE_AFTER_MINUTES` in the server environment and use the same value for `VITE_STATUS_STALE_AFTER_MINUTES` in the client so status freshness is consistent. Restart the server and Vite after changing environment variables. Variables prefixed with `VITE_` are exposed to browser code; never put secrets in them.
@@ -155,9 +155,9 @@ The server reads private configuration from `%LOCALAPPDATA%\\StudySpot\\server.e
 
 Mock data changes persist in browser localStorage. The moderator dashboard offers a confirmation-protected reset of sample spaces, reports, and mock registrations.
 
-## Planned API
+## API
 
-The client adapter is prepared for the endpoint families below. Authentication and report submission, history, and latest-status routes are implemented; study-space routes and complete live client integration remain in progress. See [docs/API.md](./docs/API.md) for the reporting contract and remaining decisions.
+The client adapter uses the endpoint families below when `VITE_USE_MOCK_API=false`. Authentication, study-space, and report routes are implemented. See [docs/API.md](./docs/API.md) for the API contract.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -167,18 +167,18 @@ The client adapter is prepared for the endpoint families below. Authentication a
 | `POST` | `/api/spaces` | Create a space (moderator) |
 | `GET` | `/api/spaces/:id` | Get a space |
 | `PATCH` | `/api/spaces/:id` | Update a space (moderator) |
-| `DELETE` | `/api/spaces/:id` | Deactivate a space (moderator; semantics to confirm) |
+| `DELETE` | `/api/spaces/:id` | Deactivate a space (moderator) |
 | `GET` | `/api/spaces/:id/reports` | Get report history |
 | `POST` | `/api/spaces/:id/reports` | Submit a report |
 
-Directory filters are planned for `search`, `building`, `area`, `quietZone`, `groupStudyAllowed`, `facility`, and `status`. See [docs/API.md](./docs/API.md) for proposed fields, payloads, and open contract decisions.
+Directory filters support `search`, `building`, `area`, `quietZone`, `groupStudyAllowed`, `facility`, and `status`. See [docs/API.md](./docs/API.md) for fields and response shapes.
 
 ## Security and limitations
 
 - Mock authentication and browser storage are not secure and must not be used in production.
 - Backend authentication, input validation, and role authorization are enforced server-side; production deployment settings still need to be configured.
 - Availability is community-reported, not live occupancy.
-- The real Express API has not been implemented or tested against the frontend; response mapping may need updates when the contract is finalized.
+- The frontend defaults to mock mode. Set `VITE_USE_MOCK_API=false` in `client/.env` to use the Express API.
 - Registered mock-account credentials are intentionally not persisted.
 
 ## Collaboration

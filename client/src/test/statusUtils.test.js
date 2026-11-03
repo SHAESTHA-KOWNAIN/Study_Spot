@@ -11,6 +11,14 @@ describe("availability helpers", () => {
     expect(getFreshness(null, 60, now)).toBe("none");
   });
 
+  it("prefers freshness returned by the backend when provided", () => {
+    const now = new Date("2026-10-29T10:00:00Z").getTime();
+    expect(getFreshness("2026-10-29T09:30:00Z", 60, now, "Stale")).toBe("stale");
+    expect(getFreshness("2026-10-29T09:30:00Z", 60, now, "Fresh", 15)).toBe("stale");
+    expect(getFreshness("2026-10-29T09:30:00Z", 5, now, "Fresh", 60)).toBe("fresh");
+    expect(getFreshness(null, 60, now, "No Report")).toBe("none");
+  });
+
   it("renders a latest report based on timestamp, not array order", () => {
     const reports = [
       { status: "Busy", createdAt: "2026-10-28T08:00:00Z" },

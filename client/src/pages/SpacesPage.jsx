@@ -29,7 +29,7 @@ export default function SpacesPage() {
       const grouped = await Promise.all(results.map((space) => getSpaceReports(space.id)));
       setReports(grouped.flat());
     } catch (loadError) {
-      setError(loadError.message || "Study spaces could not be loaded.");
+      setError(loadError.userMessage || loadError.message || "Study spaces could not be loaded.");
     } finally {
       setLoading(false);
     }

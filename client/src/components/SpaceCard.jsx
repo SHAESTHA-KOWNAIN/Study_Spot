@@ -11,7 +11,7 @@ export default function SpaceCard({ space, reports }) {
     <article className="space-card">
       <div className="space-card-top">
         <StatusBadge status={latest?.status} />
-        {latest && <FreshnessBadge timestamp={latest.createdAt} />}
+        {latest && <FreshnessBadge timestamp={latest.createdAt} reportedFreshness={latest.freshness} reportedThresholdMinutes={latest.freshnessThresholdMinutes} />}
       </div>
       <h2>{space.name}</h2>
       <p className="space-location"><MapPin size={15} aria-hidden="true" /> {space.building} <span aria-hidden="true">·</span> {space.area}</p>

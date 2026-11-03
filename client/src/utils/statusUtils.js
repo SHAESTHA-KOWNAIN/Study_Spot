@@ -3,7 +3,16 @@ const thresholdValue = import.meta.env.VITE_STATUS_STALE_AFTER_MINUTES;
 const configuredThreshold = thresholdValue?.trim() ? Number(thresholdValue) : 60;
 const defaultThresholdMinutes = Number.isFinite(configuredThreshold) && configuredThreshold >= 0 ? configuredThreshold : 60;
 
-export function getFreshness(timestamp, thresholdMinutes = defaultThresholdMinutes, now = Date.now()) {
+export function getFreshness(timestamp, thresholdMinutes = defaultThresholdMinutes, now = Date.now(), reportedFreshness, reportedThresholdMinutes) {
+  if (reportedFreshness === "Fresh" && Number.isFinite(reportedThresholdMinutes)) {
+    const reportTime = new Date(timestamp).getTime();
+    return Number.isFinite(reportTime) && now - reportTime < reportedThresholdMinutes * 60 * 1000
+      ? "fresh"
+      : "stale";
+  }
+  if (reportedFreshness === "Fresh") return "fresh";
+  if (reportedFreshness === "Stale") return "stale";
+  if (reportedFreshness === "No Report") return "none";
   if (!timestamp) return "none";
   const reportTime = new Date(timestamp).getTime();
   if (!Number.isFinite(reportTime)) return "stale";

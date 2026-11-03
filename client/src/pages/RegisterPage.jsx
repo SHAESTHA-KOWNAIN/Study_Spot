@@ -48,7 +48,7 @@ export default function RegisterPage() {
       navigate("/spaces", { replace: true });
     } catch (error) {
         setRequestError(
-          error.userMessage || "Registration failed. Please try again."
+          error.userMessage || error.message || "Registration failed. Please try again."
         );
     } finally {
       setSubmitting(false);

@@ -23,7 +23,7 @@ export default function ReportForm({ onSubmit }) {
       setStatus("");
       setNote("");
     } catch (error) {
-      setFeedback({ type: "error", text: error.message || "Your report could not be submitted." });
+      setFeedback({ type: "error", text: error.userMessage || error.message || "Your report could not be submitted." });
     } finally {
       setSubmitting(false);
     }

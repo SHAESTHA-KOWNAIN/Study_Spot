@@ -73,7 +73,14 @@ beforeEach(async () => {
     });
     memberToken = "Bearer valid-member-token";
     tokens.set(memberToken, member);
-    space = await StudySpace.create({ name: "Central Library", active: true });
+    space = await StudySpace.create({
+        name: "Central Library",
+        building: "Main Block",
+        area: "Level 2",
+        description: "A quiet reading space.",
+        facilities: [],
+        active: true
+    });
 });
 
 function submitReport(spaceId = space.id, body = { status: "Available" }, token = memberToken) {
@@ -142,7 +149,12 @@ describe("report submission", () => {
 
 describe("report history", () => {
     it("returns only the requested space's reports newest first with safe reporter data", async () => {
-        const otherSpace = await StudySpace.create({ name: "Science Study Area" });
+        const otherSpace = await StudySpace.create({
+            name: "Science Study Area",
+            building: "Science Block",
+            area: "Atrium",
+            description: "An open study area."
+        });
         await SpaceReport.create([
             { spaceId: space.id, reporterId: member.id, status: "Available", reportedAt: new Date("2026-10-31T08:00:00Z") },
             { spaceId: space.id, reporterId: member.id, status: "Busy", reportedAt: new Date("2026-10-31T09:00:00Z") },
@@ -161,6 +173,11 @@ describe("report history", () => {
         assert.deepEqual(response.body.data.reports.map((report) => report.status), ["Busy", "Available"]);
         assert.equal(response.body.data.reports[0].reporterId.name, "Arun");
         assert.equal(response.body.data.reports[0].reporterName, "Arun");
+        assert.equal(
+            response.body.data.reports[0].freshness,
+            calculateFreshness(response.body.data.reports[0].reportedAt)
+        );
+        assert.equal(response.body.data.reports[0].freshnessThresholdMinutes, 120);
         assert.equal(JSON.stringify(response.body).includes("passwordHash"), false);
         assert.equal(JSON.stringify(response.body).includes("must-not-be-returned"), false);
     });
@@ -207,7 +224,7 @@ describe("report history", () => {
         assert.equal((await request(app).get(`/api/spaces/${new mongoose.Types.ObjectId()}/reports`)).status, 404);
     });
 
-    it("returns a clear service error when the team-owned space model is not registered", async () => {
+    it("returns a clear service error when the StudySpace model is unavailable", async () => {
         const registeredModel = mongoose.models.StudySpace;
         delete mongoose.models.StudySpace;
         try {
