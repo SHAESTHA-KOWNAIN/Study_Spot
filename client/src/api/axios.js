@@ -1,7 +1,14 @@
 import axios from "axios";
 
+const configuredApiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+
+const defaultApiBaseUrl = import.meta.env.PROD
+  ? "https://study-spot.onrender.com/api"
+  : "http://localhost:5000/api";
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  baseURL: (configuredApiBaseUrl || defaultApiBaseUrl).replace(/\/+$/, ""),
   headers: { "Content-Type": "application/json" },
 });
 
@@ -17,7 +24,7 @@ http.interceptors.request.use((config) => {
 
 const getFriendlyErrorMessage = (error) => {
   if (!error.response) {
-    return "Unable to connect to the server. Please check your internet connection.";
+    return "Unable to reach the server. Check your connection, API URL, and server CORS configuration.";
   }
 
   const status = error.response.status;

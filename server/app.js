@@ -9,9 +9,24 @@ require("./src/models/StudySpace");
 
 const app = express();
 
-// Middleware
+const configuredOrigins = (process.env.CLIENT_URL || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+const allowedOrigins = new Set([
+    "http://localhost:5173",
+    "https://study-spot-gamma-ten.vercel.app",
+    ...configuredOrigins
+]);
+
+// The cors middleware responds to browser OPTIONS preflight requests before
+// the API routes. Only the local client, production client, and configured
+// client origins receive CORS permission.
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
+    origin: (origin, callback) => {
+        callback(null, !origin || allowedOrigins.has(origin));
+    },
+    optionsSuccessStatus: 204
 }));
 
 app.use(express.json());
